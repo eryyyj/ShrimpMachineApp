@@ -2,7 +2,7 @@ import random
 from ultralytics import YOLO
 
 class ShrimpDetector:
-    def __init__(self, model_path="models/best.pt"):
+    def __init__(self, model_path="models\YOLOshrimp.pt"):
         self.model = YOLO(model_path)
 
     def detect(self, frame):

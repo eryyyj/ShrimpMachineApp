@@ -1,7 +1,7 @@
 import cv2, datetime
 from PyQt5 import QtWidgets, QtGui, QtCore
 from compute import compute_feed
-from database import save_run, sync_runs
+from database import save_biomass_record, sync_biomass_records
 from detector import ShrimpDetector
 from camera import Camera
 
@@ -59,12 +59,12 @@ class MainWindow(QtWidgets.QWidget):
         self.timer.stop()
         end = datetime.datetime.now().isoformat()
         b, f, p, fl = compute_feed(self.count)
-        save_run(self.user_id, self.start_time, end, self.count, b, f, p, fl)
+        save_biomass_record(self.user_id, self.count, b, f)
         QtWidgets.QMessageBox.information(self, "Saved", "Run saved locally.")
         self.start_time = None
 
     def sync(self):
-        n = sync_runs()
+        n = sync_biomass_records()
         QtWidgets.QMessageBox.information(self, "Sync", f"Synced {n} record(s)." if n else "Nothing to sync.")
 
     def update_frame(self):
