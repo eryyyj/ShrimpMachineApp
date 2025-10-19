@@ -114,14 +114,14 @@ class MainMenu(QtWidgets.QWidget):
             self.lblRecent.setText("No recorded process yet.")
 
     def open_biomass(self):
-        self.hide()
         self.bw = BiomassWindow(self.user_id, self)
         self.bw.showFullScreen()
+        self.hide()
 
     def open_history(self):
-        self.hide()
         self.hw = HistoryWindow(self, self.user_id)
         self.hw.showFullScreen()
+        self.hide()
 
     def logout(self):
         self.logout_requested = True

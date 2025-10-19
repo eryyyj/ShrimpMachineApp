@@ -1,4 +1,15 @@
-ultralytics
-PyQt5
-opencv-python
-pymongo
+# Core dependencies
+PyQt5==5.15.10
+opencv-python==4.9.0.80
+numpy<2.0
+pillow==10.3.0
+
+# ONNX Runtime optimized for ARM CPU
+onnxruntime==1.17.1
+
+# Database (MongoDB)
+pymongo==4.8.0
+
+# Utility
+python-dotenv==1.0.1
+requests==2.31.0
