@@ -1,4 +1,4 @@
-import sys, cv2, datetime
+import sys, cv2, datetime, os
 from PyQt5 import QtWidgets, QtGui, QtCore
 from compute import compute_feed
 from detector import ShrimpDetector
@@ -13,7 +13,7 @@ sys.excepthook = qt_exception_hook
 
 
 class VideoLabel(QtWidgets.QLabel):
-    """Displays video frames from the camera."""
+    """Displays video frames from the camera or test image."""
     def __init__(self):
         super().__init__()
         self.setAlignment(QtCore.Qt.AlignCenter)
@@ -41,6 +41,7 @@ class BiomassWindow(QtWidgets.QWidget):
         self.camera = Camera()
         self.running = False
         self.count = 0
+        self.mode = "Camera"  # default
 
         # --- Window setup ---
         self.setWindowFlag(QtCore.Qt.FramelessWindowHint)
@@ -51,6 +52,22 @@ class BiomassWindow(QtWidgets.QWidget):
         self.lblTitle = QtWidgets.QLabel("Biomass Calculation")
         self.lblTitle.setAlignment(QtCore.Qt.AlignCenter)
         self.lblTitle.setStyleSheet("font-size:38px; font-weight:bold; margin-bottom:10px;")
+
+        # --- Source selector ---
+        self.selector = QtWidgets.QComboBox()
+        self.selector.addItems(["Camera", "Test Image"])
+        self.selector.setFixedWidth(300)
+        self.selector.setStyleSheet("""
+            QComboBox {
+                font-size:24px;
+                padding:8px;
+                border:2px solid #0077cc;
+                border-radius:10px;
+                background-color:white;
+                color:black;
+            }
+        """)
+        self.selector.currentTextChanged.connect(self.change_source)
 
         # --- Status indicator ---
         self.lblStatus = QtWidgets.QLabel("Idle")
@@ -79,7 +96,12 @@ class BiomassWindow(QtWidgets.QWidget):
         layout.setContentsMargins(40, 20, 40, 20)
         layout.setSpacing(20)
         layout.setAlignment(QtCore.Qt.AlignCenter)
-        layout.addWidget(self.lblTitle)
+
+        top_layout = QtWidgets.QHBoxLayout()
+        top_layout.addWidget(self.lblTitle, alignment=QtCore.Qt.AlignCenter)
+        top_layout.addWidget(self.selector, alignment=QtCore.Qt.AlignRight)
+
+        layout.addLayout(top_layout)
         layout.addWidget(self.lblStatus)
         layout.addWidget(self.video, alignment=QtCore.Qt.AlignCenter)
         layout.addWidget(self.lblCount)
@@ -122,6 +144,16 @@ class BiomassWindow(QtWidgets.QWidget):
         return b
 
     # ---------------- Logic ----------------
+    def change_source(self, mode):
+        """Switch between camera and test image mode."""
+        self.mode = mode
+        if mode == "Camera":
+            self.camera = Camera()
+            print("Switched to Camera mode.")
+        else:
+            self.camera.release()
+            print("Switched to Test Image mode.")
+
     def start(self):
         if not self.running:
             self.running = True
@@ -158,13 +190,17 @@ class BiomassWindow(QtWidgets.QWidget):
         self.close()
 
     def update_frame(self):
-        frame = self.camera.get_frame()
+        if self.mode == "Camera":
+            frame = self.camera.get_frame()
+        else:
+            frame = cv2.imread("test.jpeg")
+
         if frame is None:
             return
+
         count, frame_rgb = self.detector.detect(frame)
         self.count = count
         b, f, p, fl = compute_feed(count)
         self.lblCount.setText(f"Count: {count}")
         self.lblFeed.setText(f"Biomass: {b:.2f}g | Feed: {f:.2f}g | Protein: {p:.2f}g | Filler: {fl:.2f}g")
         self.video.set_frame(cv2.cvtColor(frame_rgb, cv2.COLOR_RGB2BGR))
-

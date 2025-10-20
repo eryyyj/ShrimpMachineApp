@@ -7,8 +7,9 @@ class Login(QtWidgets.QDialog):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Shrimp Biomass System - Login")
-        self.setWindowFlag(QtCore.Qt.FramelessWindowHint)  
-        self.showFullScreen()  
+        self.setWindowFlag(QtCore.Qt.FramelessWindowHint)
+        # Remove showFullScreen() from here
+
         layout = QtWidgets.QVBoxLayout(self)
         layout.setContentsMargins(250, 180, 250, 180)
 
@@ -47,6 +48,11 @@ class Login(QtWidgets.QDialog):
 
         self.user_id = None
 
+    def showEvent(self, event):
+        """Ensure fullscreen only after the dialog is shown."""
+        super().showEvent(event)
+        QtCore.QTimer.singleShot(0, self.showFullScreen)
+
     def try_login(self):
         username = self.user.text().strip()
         password = self.pw.text().strip()
@@ -61,6 +67,7 @@ class Login(QtWidgets.QDialog):
         else:
             self.info.setText("Invalid credentials")
 
+
 def main():
     init_db()
     app = QtWidgets.QApplication(sys.argv)
@@ -73,7 +80,6 @@ def main():
         main_window = MainMenu(login.user_id)
         main_window.showFullScreen()
 
-        # Wait until user logs out or closes
         app.exec_()
 
         if not getattr(main_window, "logout_requested", False):
