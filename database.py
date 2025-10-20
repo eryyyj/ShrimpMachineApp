@@ -65,7 +65,7 @@ def verify_user(username, password):
     print(f"Using MONGO_DB_NAME: {MONGO_DB_NAME}")
 
     try:
-        client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=3000)
+        client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=20000)
         db = client[MONGO_DB_NAME]
         user = db["users"].find_one({"username": username})
         print(f"MongoDB user found: {bool(user)}")

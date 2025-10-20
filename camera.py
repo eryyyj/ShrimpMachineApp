@@ -1,14 +1,22 @@
-import cv2
+import cv2, os
 
 class Camera:
-    def __init__(self, index=0):
-        self.cap = cv2.VideoCapture(index)
+    def __init__(self):
+        # Prefer the virtual camera created by rpicam-vid
+
+        if os.path.exists("/dev/video10"):
+            self.cap = cv2.VideoCapture("/dev/video10")
+        else:
+            self.cap = cv2.VideoCapture(0)
+
+        # Configure resolution (optional, some bridges ignore this)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
     def get_frame(self):
-        ok, frame = self.cap.read()
-        return frame if ok else None
+        ret, frame = self.cap.read()
+        return frame if ret else None
 
     def release(self):
-        self.cap.release()
+        if self.cap.isOpened():
+            self.cap.release()
