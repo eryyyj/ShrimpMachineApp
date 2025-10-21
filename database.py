@@ -216,7 +216,7 @@ def sync_biomass_records(owner_id):
 
     try:
         print(f"Preparing to sync {len(rows)} record(s) for user {owner_id}...")
-        client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=4000)
+        client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=20000)
         db = client[MONGO_DB_NAME]          
         col = db["biomassrecords"]           
 

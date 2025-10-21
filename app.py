@@ -1,3 +1,8 @@
+import os
+os.environ.setdefault("QT_QPA_PLATFORM", "wayland")  # fallback if systemd variable missing
+os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "0"
+os.environ["QT_SCALE_FACTOR"] = "1"
+os.environ["QT_FONT_DPI"] = "96"
 import sys
 from PyQt5 import QtWidgets, QtCore
 from database import init_db, verify_user
