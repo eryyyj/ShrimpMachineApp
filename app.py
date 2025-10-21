@@ -65,27 +65,35 @@ class Login(QtWidgets.QDialog):
         self.keyboard_process = None
 
     def showEvent(self, event):
-        """Show full screen once dialog appears."""
+        """Show fullscreen and make sure app allows other windows (keyboard) on top."""
         super().showEvent(event)
         QtCore.QTimer.singleShot(0, self.showFullScreen)
+        # allow keyboard windows to overlap
+        self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnBottomHint)
+        self.show()
 
-    # --- Keyboard control methods ---
     def open_keyboard(self):
-        """Open the matchbox keyboard at the bottom of the screen."""
+        """Launch the matchbox keyboard and ensure it's visible above the app."""
         try:
-            subprocess.Popen(["pkill", "-f", "matchbox-keyboard"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            subprocess.Popen(["pkill", "-f", "matchbox-keyboard"],
+                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         except Exception:
             pass
 
         try:
-            # Launch matchbox keyboard anchored to bottom
-            self.keyboard_process = subprocess.Popen(
-                ["matchbox-keyboard", "--xid", "--geometry", "0x0+0+1080"],
+            # Spawn keyboard detached
+            subprocess.Popen(
+                ["matchbox-keyboard"],
                 stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
+                stderr=subprocess.DEVNULL,
+                start_new_session=True
             )
+            # Briefly lower the app so keyboard is not hidden behind it
+            self.showMinimized()
+            QtCore.QTimer.singleShot(800, self.showFullScreen)  # bring app back after 0.8 s
         except Exception as e:
             print("Keyboard launch failed:", e)
+
 
     def close_keyboard(self):
         """Close the matchbox keyboard."""
