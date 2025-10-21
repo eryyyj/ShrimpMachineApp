@@ -10,6 +10,7 @@ from PyQt5 import QtWidgets, QtCore
 from database import init_db, verify_user
 from ui_main import MainMenu
 
+
 class Login(QtWidgets.QDialog):
     def __init__(self):
         super().__init__()
@@ -24,7 +25,6 @@ class Login(QtWidgets.QDialog):
         self.user.setPlaceholderText("Username")
         self.user.setFixedHeight(70)
         self.user.setStyleSheet("font-size:28px; padding:10px; border-radius:10px;")
-        self.user.installEventFilter(self)
 
         # Password field
         self.pw = QtWidgets.QLineEdit()
@@ -32,11 +32,12 @@ class Login(QtWidgets.QDialog):
         self.pw.setEchoMode(QtWidgets.QLineEdit.Password)
         self.pw.setFixedHeight(70)
         self.pw.setStyleSheet("font-size:28px; padding:10px; border-radius:10px;")
-        self.pw.installEventFilter(self)
 
+        # Info label
         self.info = QtWidgets.QLabel("")
         self.info.setStyleSheet("font-size:22px; color:red;")
 
+        # Login button
         btn = QtWidgets.QPushButton("Login")
         btn.setFixedHeight(80)
         btn.setStyleSheet("""
@@ -57,38 +58,42 @@ class Login(QtWidgets.QDialog):
         layout.addWidget(self.info)
 
         self.user_id = None
-        self.keyboard_process = None  # track the keyboard process
+        self.keyboard_visible = False
+        self.keyboard_process = None
+
+        # Connect focus signals more reliably
+        self.user.focusInEvent = lambda event: self.open_keyboard()
+        self.pw.focusInEvent = lambda event: self.open_keyboard()
 
     def showEvent(self, event):
-        """Ensure fullscreen only after the dialog is shown."""
+        """Ensure fullscreen after dialog is shown."""
         super().showEvent(event)
         QtCore.QTimer.singleShot(0, self.showFullScreen)
 
-    def eventFilter(self, obj, event):
-        """Detect when text fields are focused."""
-        if event.type() == QtCore.QEvent.FocusIn:
-            self.open_keyboard()
-        elif event.type() == QtCore.QEvent.FocusOut:
-            # Close only if neither field is focused
-            if not self.user.hasFocus() and not self.pw.hasFocus():
-                self.close_keyboard()
-        return super().eventFilter(obj, event)
-
     def open_keyboard(self):
-        """Launch Onboard only if not already running."""
-        if self.keyboard_process is None or self.keyboard_process.poll() is not None:
-            self.keyboard_process = subprocess.Popen(["onboard"])
+        """Keep the Onboard keyboard open persistently."""
+        if not self.keyboard_visible:
+            try:
+                # Kill any old keyboard instances first
+                subprocess.Popen(["pkill", "-f", "onboard"], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+            except Exception:
+                pass
+            # Launch Onboard detached
+            self.keyboard_process = subprocess.Popen(["onboard", "--xid"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            self.keyboard_visible = True
 
     def close_keyboard(self):
         """Close Onboard gracefully."""
         try:
-            subprocess.Popen(["pkill", "onboard"])
+            subprocess.Popen(["pkill", "-f", "onboard"], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+            self.keyboard_visible = False
         except Exception:
             pass
 
     def try_login(self):
         username = self.user.text().strip()
         password = self.pw.text().strip()
+
         if not username or not password:
             self.info.setText("Please enter username and password.")
             return
@@ -96,10 +101,11 @@ class Login(QtWidgets.QDialog):
         uid = verify_user(username, password)
         if uid:
             self.user_id = uid
-            self.close_keyboard()  # hide keyboard after login
+            self.close_keyboard()  # close keyboard when login succeeds
             self.accept()
         else:
             self.info.setText("Invalid credentials")
+
 
 def main():
     init_db()
@@ -118,6 +124,7 @@ def main():
             break
 
     sys.exit()
+
 
 if __name__ == "__main__":
     main()
