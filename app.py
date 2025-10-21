@@ -73,7 +73,7 @@ class Login(QtWidgets.QDialog):
         self.show()
 
     def open_keyboard(self):
-        """Launch the matchbox keyboard and ensure it's visible above the app."""
+        """Show matchbox keyboard anchored at the bottom, above the app."""
         try:
             subprocess.Popen(["pkill", "-f", "matchbox-keyboard"],
                              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -81,16 +81,26 @@ class Login(QtWidgets.QDialog):
             pass
 
         try:
-            # Spawn keyboard detached
+            # Launch keyboard detached
             subprocess.Popen(
                 ["matchbox-keyboard"],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 start_new_session=True
             )
-            # Briefly lower the app so keyboard is not hidden behind it
-            self.showMinimized()
-            QtCore.QTimer.singleShot(800, self.showFullScreen)  # bring app back after 0.8 s
+
+            # Wait briefly for it to appear, then raise it on top
+            def raise_keyboard():
+                try:
+                    subprocess.Popen(
+                        ["xdotool", "search", "--classname", "Matchbox-keyboard", "windowraise"],
+                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+                    )
+                except Exception:
+                    pass
+
+            QtCore.QTimer.singleShot(800, raise_keyboard)
+
         except Exception as e:
             print("Keyboard launch failed:", e)
 
