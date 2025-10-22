@@ -133,20 +133,32 @@ def main():
     init_db()
     app = QtWidgets.QApplication(sys.argv)
 
-    while True:
-        login = Login()
-        if not login.exec_():
-            break
+    AUTO_USERNAME = "eryyyj"
+    AUTO_PASSWORD = "123456789"
 
-        main_window = MainMenu(login.user_id)
+    # Try to verify credentials automatically
+    uid = verify_user(AUTO_USERNAME, AUTO_PASSWORD)
+    if uid:
+        print(f"Auto-login successful for user: {AUTO_USERNAME}")
+        main_window = MainMenu(uid)
         main_window.showFullScreen()
-
         app.exec_()
+    else:
+        print("Auto-login failed — showing manual login screen.")
+        while True:
+            login = Login()
+            if not login.exec_():  # user closed login
+                break
 
-        if not getattr(main_window, "logout_requested", False):
-            break
+            main_window = MainMenu(login.user_id)
+            main_window.showFullScreen()
+            app.exec_()
+
+            if not getattr(main_window, "logout_requested", False):
+                break
 
     sys.exit()
+
 
 
 if __name__ == "__main__":
