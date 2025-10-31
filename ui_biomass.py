@@ -26,7 +26,9 @@ class VideoLabel(QtWidgets.QLabel):
         super().__init__()
         self.setAlignment(QtCore.Qt.AlignCenter)
         self.setStyleSheet("border: 2px solid #0077cc; border-radius: 8px; background-color: black;")
-        self.setFixedSize(800, 440)  # slightly smaller to fit touchscreen
+        # allow the video area to expand to fullscreen instead of forcing a fixed size
+        self.setMinimumSize(640, 320)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
     def set_frame(self, frame):
         try:
@@ -53,25 +55,30 @@ class BiomassWindow(QtWidgets.QWidget):
 
         # --- Window setup ---
         self.setWindowFlag(QtCore.Qt.FramelessWindowHint)
-        self.showFullScreen()
-        self.setFixedSize(1024, 600)
+        # switch to fullscreen mode (remove fixed size)
+        # self.setFixedSize(1024, 600)
         self.setStyleSheet(f"background-color:{BG_COLOR}; color:{TEXT_COLOR}; font-family:{FONT_FAMILY};")
+
+        # Force fullscreen state (call after initial setup)
+        QtCore.QTimer.singleShot(0, lambda: self.showFullScreen())
 
         # --- Title ---
         self.lblTitle = QtWidgets.QLabel("Biomass Calculation")
         self.lblTitle.setAlignment(QtCore.Qt.AlignCenter)
-        self.lblTitle.setStyleSheet("font-size:32px; font-weight:bold; margin-bottom:5px;")
+        # smaller title to fit
+        self.lblTitle.setStyleSheet("font-size:20px; font-weight:bold; margin-bottom:6px;")
 
         # --- Source selector ---
         self.selector = QtWidgets.QComboBox()
         self.selector.addItems(["Camera", "Test Image"])
-        self.selector.setFixedWidth(260)
+        # narrower selector
+        self.selector.setFixedWidth(160)
         self.selector.setStyleSheet("""
             QComboBox {
-                font-size:22px;
-                padding:6px;
+                font-size:14px;
+                padding:4px;
                 border:2px solid #0077cc;
-                border-radius:10px;
+                border-radius:8px;
                 background-color:white;
                 color:black;
             }
@@ -81,7 +88,7 @@ class BiomassWindow(QtWidgets.QWidget):
         # --- Status indicator ---
         self.lblStatus = QtWidgets.QLabel("Idle")
         self.lblStatus.setAlignment(QtCore.Qt.AlignCenter)
-        self.lblStatus.setStyleSheet("font-size:22px; margin-bottom:10px; color:#555;")
+        self.lblStatus.setStyleSheet("font-size:14px; margin-bottom:6px; color:#555;")
 
         # --- Video Display ---
         self.video = VideoLabel()
@@ -91,7 +98,7 @@ class BiomassWindow(QtWidgets.QWidget):
         self.lblFeed = QtWidgets.QLabel("Biomass: 0.00g | Feed: 0.00g | Protein: 0.00g | Filler: 0.00g")
         for lbl in [self.lblCount, self.lblFeed]:
             lbl.setAlignment(QtCore.Qt.AlignCenter)
-            lbl.setStyleSheet("font-size:22px; margin:5px;")
+            lbl.setStyleSheet("font-size:16px; margin:4px;")
 
         # --- Buttons ---
         self.btnStart = self.make_button("Start", BTN_SYNC)
@@ -102,15 +109,15 @@ class BiomassWindow(QtWidgets.QWidget):
 
         # --- Layout setup ---
         layout = QtWidgets.QVBoxLayout(self)
-        layout.setContentsMargins(30, 20, 30, 20)
-        layout.setSpacing(10)
-        layout.setAlignment(QtCore.Qt.AlignCenter)
+        layout.setContentsMargins(16, 10, 16, 12)
+        layout.setSpacing(8)
+        layout.setAlignment(QtCore.Qt.AlignTop)
 
         # --- Top row (title + selector) ---
         top_layout = QtWidgets.QHBoxLayout()
-        top_layout.setAlignment(QtCore.Qt.AlignCenter)
-        top_layout.addWidget(self.lblTitle, stretch=2)
-        top_layout.addWidget(self.selector, stretch=1, alignment=QtCore.Qt.AlignRight)
+        top_layout.setAlignment(QtCore.Qt.AlignVCenter)
+        top_layout.addWidget(self.lblTitle, stretch=3)
+        top_layout.addWidget(self.selector, stretch=0, alignment=QtCore.Qt.AlignRight)
 
         layout.addLayout(top_layout)
         layout.addWidget(self.lblStatus)
@@ -120,7 +127,7 @@ class BiomassWindow(QtWidgets.QWidget):
 
         # --- Buttons layout ---
         btn_layout = QtWidgets.QHBoxLayout()
-        btn_layout.setSpacing(15)
+        btn_layout.setSpacing(10)
         btn_layout.setAlignment(QtCore.Qt.AlignCenter)
         for b in [self.btnStart, self.btnStop, self.btnSave, self.btnReset, self.btnBack]:
             btn_layout.addWidget(b)
@@ -140,14 +147,14 @@ class BiomassWindow(QtWidgets.QWidget):
     # --- Helper ---
     def make_button(self, text, color):
         b = QtWidgets.QPushButton(text)
-        b.setFixedHeight(80)
-        b.setFixedWidth(200)
+        b.setFixedHeight(56)
+        b.setFixedWidth(140)
         b.setStyleSheet(f"""
             QPushButton {{
                 background-color:{color};
                 color:white;
-                border-radius:16px;
-                font-size:22px;
+                border-radius:12px;
+                font-size:16px;
                 font-weight:bold;
             }}
             QPushButton:pressed {{
@@ -164,7 +171,10 @@ class BiomassWindow(QtWidgets.QWidget):
             self.camera = Camera()
             print("Switched to Camera mode.")
         else:
-            self.camera.release()
+            try:
+                self.camera.release()
+            except Exception:
+                pass
             print("Switched to Test Image mode.")
 
     def start(self):
@@ -196,10 +206,13 @@ class BiomassWindow(QtWidgets.QWidget):
 
     def go_back(self):
         self.timer.stop()
-        self.camera.release()
+        try:
+            self.camera.release()
+        except Exception:
+            pass
         if self.parent:
             self.parent.update_recent()
-            self.parent.showFullScreen()
+            self.parent.show()
         self.close()
 
     def update_frame(self):
@@ -228,5 +241,5 @@ if __name__ == "__main__":
     app.setAttribute(QtCore.Qt.AA_Use96Dpi, True)
 
     win = BiomassWindow(user_id=1)
-    win.showFullScreen()
+    win.show()
     sys.exit(app.exec_())

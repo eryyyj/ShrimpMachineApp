@@ -21,9 +21,9 @@ class MainMenu(QtWidgets.QWidget):
         self.user_id = user_id
         self.logout_requested = False
 
-        # Make it full screen but not oversized
+        # Make it fixed to target screen size
         self.setWindowFlag(QtCore.Qt.FramelessWindowHint)
-        self.showFullScreen()
+        self.setFixedSize(1024, 600)
 
         # --- Normalize size policy (prevents zoom scaling) ---
         self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
@@ -34,7 +34,7 @@ class MainMenu(QtWidgets.QWidget):
         # --- Title ---
         self.lblTitle = QtWidgets.QLabel("Shrimp Biomass Calculation System")
         self.lblTitle.setAlignment(QtCore.Qt.AlignCenter)
-        self.lblTitle.setStyleSheet("font-size:32px; font-weight:bold; margin-top:10px; margin-bottom:10px;")
+        self.lblTitle.setStyleSheet("font-size:18px; font-weight:bold; margin-top:6px; margin-bottom:8px;")
 
         # --- Last Process (center area) ---
         self.lastFrame = QtWidgets.QFrame()
@@ -42,27 +42,27 @@ class MainMenu(QtWidgets.QWidget):
             QFrame {
                 background-color: #f7fbff;
                 border: 2px solid #0077cc;
-                border-radius: 12px;
-                padding: 30px;
+                border-radius: 10px;
+                padding: 14px;
             }
         """)
 
         lastLayout = QtWidgets.QVBoxLayout(self.lastFrame)
-        lastLayout.setSpacing(10)
+        lastLayout.setSpacing(6)
         lastLayout.setAlignment(QtCore.Qt.AlignCenter)
 
         self.lblRecentTitle = QtWidgets.QLabel("Last Process Summary")
         self.lblRecentTitle.setAlignment(QtCore.Qt.AlignCenter)
-        self.lblRecentTitle.setStyleSheet("font-size:26px; font-weight:bold; color:#005fa3;")
+        self.lblRecentTitle.setStyleSheet("font-size:18px; font-weight:bold; color:#005fa3;")
 
         self.lblRecent = QtWidgets.QLabel("No recorded process yet.")
         self.lblRecent.setAlignment(QtCore.Qt.AlignCenter)
         self.lblRecent.setWordWrap(True)
         self.lblRecent.setStyleSheet("""
-            font-size:22px;
+            font-size:16px;
             font-weight:600;
             color:#333;
-            line-height: 1.4;
+            line-height: 1.2;
         """)
 
         lastLayout.addWidget(self.lblRecentTitle)
@@ -74,16 +74,16 @@ class MainMenu(QtWidgets.QWidget):
         self.btnLogout = self.make_button("Logout", BTN_DANGER)
 
         buttonLayout = QtWidgets.QHBoxLayout()
-        buttonLayout.setSpacing(20)
-        buttonLayout.setContentsMargins(40, 10, 40, 30)
+        buttonLayout.setSpacing(12)
+        buttonLayout.setContentsMargins(20, 8, 20, 12)
         buttonLayout.addWidget(self.btnStart)
         buttonLayout.addWidget(self.btnHistory)
         buttonLayout.addWidget(self.btnLogout)
 
         # --- Main Layout ---
         mainLayout = QtWidgets.QVBoxLayout(self)
-        mainLayout.setContentsMargins(40, 30, 40, 30)
-        mainLayout.setSpacing(10)
+        mainLayout.setContentsMargins(16, 12, 16, 12)
+        mainLayout.setSpacing(8)
         mainLayout.addWidget(self.lblTitle)
         mainLayout.addStretch(1)
         mainLayout.addWidget(self.lastFrame, stretch=3, alignment=QtCore.Qt.AlignCenter)
@@ -100,15 +100,16 @@ class MainMenu(QtWidgets.QWidget):
 
     def make_button(self, text, color):
         b = QtWidgets.QPushButton(text)
-        b.setFixedHeight(120)  # reduced from 160 to better fit screen
+        b.setFixedHeight(72)
+        b.setFixedWidth(280)
         b.setStyleSheet(f"""
             QPushButton {{
                 background-color:{color};
                 color:white;
-                border-radius:20px;
-                font-size:26px;
+                border-radius:12px;
+                font-size:18px;
                 font-weight:bold;
-                padding: 10px;
+                padding: 6px;
             }}
             QPushButton:pressed {{
                 background-color:#005fa3;
@@ -125,7 +126,7 @@ class MainMenu(QtWidgets.QWidget):
                 f"<b>Shrimp Count:</b> {shrimpCount}<br>"
                 f"<b>Biomass:</b> {biomass:.3f} g<br>"
                 f"<b>Feed:</b> {feed:.3f} g<br>"
-                f"<span style='font-size:20px; color:#666;'><b>Date:</b> {date[:19]}</span>"
+                f"<span style='font-size:14px; color:#666;'><b>Date:</b> {date[:19]}</span>"
                 f"</div>"
             )
         else:
@@ -133,12 +134,12 @@ class MainMenu(QtWidgets.QWidget):
 
     def open_biomass(self):
         self.bw = BiomassWindow(self.user_id, self)
-        self.bw.showFullScreen()
+        self.bw.show()
         self.hide()
 
     def open_history(self):
         self.hw = HistoryWindow(self, self.user_id)
-        self.hw.showFullScreen()
+        self.hw.show()
         self.hide()
 
     def logout(self):
@@ -155,5 +156,5 @@ if __name__ == "__main__":
     app.setAttribute(QtCore.Qt.AA_Use96Dpi, True)
 
     window = MainMenu(user_id=1)
-    window.showFullScreen()
+    window.show()
     sys.exit(app.exec_())

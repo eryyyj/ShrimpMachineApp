@@ -20,14 +20,18 @@ class HistoryWindow(QtWidgets.QWidget):
 
         # --- Window configuration ---
         self.setWindowFlag(QtCore.Qt.FramelessWindowHint)
-        self.showFullScreen()
+        # run fullscreen instead of fixed size
+        # self.setFixedSize(1024, 600)
         self.setStyleSheet(f"background-color:{BG_COLOR}; color:{TEXT_COLOR}; font-family:{FONT_FAMILY};")
         self.setWindowTitle("Biomass History")
+
+        # ensure it actually enters fullscreen after construction
+        QtCore.QTimer.singleShot(0, lambda: self.showFullScreen())
 
         # --- Title ---
         self.lblTitle = QtWidgets.QLabel("Biomass Process History")
         self.lblTitle.setAlignment(QtCore.Qt.AlignCenter)
-        self.lblTitle.setStyleSheet("font-size:30px; font-weight:bold; margin-bottom:10px; color:#0077cc;")
+        self.lblTitle.setStyleSheet("font-size:18px; font-weight:bold; margin-bottom:8px; color:#0077cc;")
 
         # --- Scroll area for record cards ---
         self.scrollArea = QtWidgets.QScrollArea()
@@ -37,7 +41,7 @@ class HistoryWindow(QtWidgets.QWidget):
         self.recordsContainer = QtWidgets.QWidget()
         self.vboxRecords = QtWidgets.QVBoxLayout(self.recordsContainer)
         self.vboxRecords.setAlignment(QtCore.Qt.AlignTop)
-        self.vboxRecords.setSpacing(12)
+        self.vboxRecords.setSpacing(8)
         self.scrollArea.setWidget(self.recordsContainer)
 
         # --- Buttons ---
@@ -46,16 +50,16 @@ class HistoryWindow(QtWidgets.QWidget):
         self.btnBack = self.make_button("Back", BTN_COLOR)
 
         btnLayout = QtWidgets.QHBoxLayout()
-        btnLayout.setSpacing(20)
-        btnLayout.setContentsMargins(30, 10, 30, 20)
+        btnLayout.setSpacing(12)
+        btnLayout.setContentsMargins(20, 8, 20, 12)
         btnLayout.addWidget(self.btnSync)
         btnLayout.addWidget(self.btnDelete)
         btnLayout.addWidget(self.btnBack)
 
         # --- Main layout ---
         mainLayout = QtWidgets.QVBoxLayout(self)
-        mainLayout.setContentsMargins(40, 25, 40, 25)
-        mainLayout.setSpacing(15)
+        mainLayout.setContentsMargins(16, 12, 16, 12)
+        mainLayout.setSpacing(8)
         mainLayout.addWidget(self.lblTitle)
         mainLayout.addWidget(self.scrollArea)
         mainLayout.addLayout(btnLayout)
@@ -69,16 +73,16 @@ class HistoryWindow(QtWidgets.QWidget):
 
     def make_button(self, text, color):
         b = QtWidgets.QPushButton(text)
-        b.setFixedHeight(70)
-        b.setFixedWidth(220)
+        b.setFixedHeight(48)
+        b.setFixedWidth(160)
         b.setStyleSheet(f"""
             QPushButton {{
                 background-color:{color};
                 color:white;
-                border-radius:18px;
-                font-size:22px;
+                border-radius:12px;
+                font-size:14px;
                 font-weight:bold;
-                padding:8px;
+                padding:6px;
             }}
             QPushButton:pressed {{
                 background-color:#005fa3;
@@ -99,7 +103,7 @@ class HistoryWindow(QtWidgets.QWidget):
         if not records:
             noData = QtWidgets.QLabel("No biomass records available.")
             noData.setAlignment(QtCore.Qt.AlignCenter)
-            noData.setStyleSheet("font-size:22px; margin-top:200px; color:#888;")
+            noData.setStyleSheet("font-size:16px; margin-top:120px; color:#888;")
             self.vboxRecords.addWidget(noData)
             return
 
@@ -129,9 +133,9 @@ class HistoryWindow(QtWidgets.QWidget):
             QFrame {{
                 background-color: {bg_color};
                 border: 2px solid {border_color};
-                border-radius: 12px;
-                padding: 15px;
-                margin-bottom: 10px;
+                border-radius: 10px;
+                padding: 10px;
+                margin-bottom: 8px;
             }}
             QFrame:hover {{
                 background-color: #f1faff;
@@ -139,11 +143,11 @@ class HistoryWindow(QtWidgets.QWidget):
         """)
 
         layout = QtWidgets.QVBoxLayout(card)
-        layout.setSpacing(5)
-        layout.setContentsMargins(15, 10, 15, 10)
+        layout.setSpacing(4)
+        layout.setContentsMargins(10, 8, 10, 8)
 
         title = QtWidgets.QLabel(f"Process on {date_str}")
-        title.setStyleSheet("font-size:22px; font-weight:bold; color:#0077cc;")
+        title.setStyleSheet("font-size:16px; font-weight:bold; color:#0077cc;")
 
         lblCount = QtWidgets.QLabel(f"Shrimp Count: {shrimpCount}")
         lblBiomass = QtWidgets.QLabel(f"Biomass: {biomass:.3f} g")
@@ -151,7 +155,7 @@ class HistoryWindow(QtWidgets.QWidget):
         lblSync = QtWidgets.QLabel(f"Status: {'✅ Synced' if synced else '❌ Not Synced'}")
 
         for lbl in [lblCount, lblBiomass, lblFeed, lblSync]:
-            lbl.setStyleSheet("font-size:20px; margin-top:2px;")
+            lbl.setStyleSheet("font-size:14px; margin-top:2px;")
 
         layout.addWidget(title)
         layout.addWidget(lblCount)
@@ -170,7 +174,7 @@ class HistoryWindow(QtWidgets.QWidget):
             self.selectedCard.setGraphicsEffect(None)
 
         shadow = QtWidgets.QGraphicsDropShadowEffect()
-        shadow.setBlurRadius(25)
+        shadow.setBlurRadius(20)
         shadow.setColor(QtGui.QColor("#0078D7"))
         shadow.setOffset(0, 0)
         card_widget.setGraphicsEffect(shadow)
@@ -200,8 +204,9 @@ class HistoryWindow(QtWidgets.QWidget):
             self.load_records()
 
     def go_back(self):
-        self.parent.update_recent()
-        self.parent.showFullScreen()
+        if self.parent:
+            self.parent.update_recent()
+            self.parent.show()
         self.close()
 
 
@@ -214,5 +219,5 @@ if __name__ == "__main__":
     app.setAttribute(QtCore.Qt.AA_Use96Dpi, True)
 
     win = HistoryWindow(None, user_id=1)
-    win.showFullScreen()
+    win.show()
     sys.exit(app.exec_())
