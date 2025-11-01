@@ -5,7 +5,7 @@ class Camera:
         # Prefer the virtual camera created by rpicam-vid
 
         if os.path.exists("/dev/video10"):
-            self.cap = cv2.VideoCapture("/dev/video10")
+            self.cap = cv2.VideoCapture("/dev/video10", cv2.CAP_V4L2)
         else:
             self.cap = cv2.VideoCapture(0)
 
